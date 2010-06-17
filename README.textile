@@ -1,0 +1,8 @@
+h1.  Prayls, a Google App Engine web framework
+
+Which tries to emulate the structure of a Ruby on Rails application, and provide some of its conveniences.
+
+h2. License
+
+Pryals is licensed under the Apache Licence, Version 2.0
+(http://www.apache.org/licenses/LICENSE-2.0.html).
