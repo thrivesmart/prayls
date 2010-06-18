@@ -8,6 +8,22 @@ import datetime
 class LilAuthentication:
 
   @staticmethod
+  def login_required(handler, lilcookies, user_class, login_url):
+    """Returns the current user if logged in, redirects to login url if not and returns None.  Sets a cookie `post_login_url` to current request url."""
+    current_user = get_current_user(lilcookies, user_class)
+    if current_user == None:
+      lilcookies.set_cookie(name = 'post_login_url', value = handler.request.url(), expires_days=1)
+      handler.redirect(login_url)
+      return False
+    else: return current_user
+
+  @staticmethod
+  def logout(lilcookies):
+    """Clears all cookies that pertain to login information: `u` and `post_login_url`"""
+    lilcookies.clear_cookie('u')
+    lilcookies.clear_cookie('post_login_url')
+
+  @staticmethod
   def set_current_user(lilcookies, user, expires_days = 2):
     """Stores the current user in a secure cookie, using LilCookies and `u` as the cookie key.  Assumes user is a db.Model"""
     lilcookies.set_secure_cookie(name = 'u', value = str(user.key()), expires_days = expires_days)
