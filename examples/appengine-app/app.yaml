@@ -1,0 +1,15 @@
+application: MY_APP_NAME
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /stylesheets
+  static_dir: public/stylesheets
+- url: /images
+  static_dir: public/images
+- url: /javascripts
+  static_dir: public/javascripts
+
+- url: .*
+  script: main.py

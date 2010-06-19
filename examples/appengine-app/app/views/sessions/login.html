@@ -1,0 +1,20 @@
+<h1>Welcome Back!</h1>
+<div>We missed you.</div>
+
+{% if msg %}
+<div class="msg">{{ msg }}</div>
+{% endif %}
+
+<form action="/login" method="post">
+  <div class="entry">
+    <label for="input_email">Email: </label>
+    <input type="text" id="input_email" name="email" />
+  </div>
+  <div class="entry">
+    <label for="input_password">Password: </label>
+    <input type="password" id="input_password" name="password" />
+  </div>
+  <div class="submit">
+    <input type="submit" name="submit" value="Login" />
+  </div>
+</form>

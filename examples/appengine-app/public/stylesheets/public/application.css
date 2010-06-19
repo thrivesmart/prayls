@@ -1,0 +1,12 @@
+body {margin:0; padding:0; font:13px/16px "Lucida Grande",Arial,Sans-serif; background-color:#fff;}
+#header {font-size:25px; background:#000; height:1.8em; line-height:1.8em; color:#fff; text-shadow:#666 -1px -1px 1px; border-bottom:1px solid #4b5462; padding:0 10px;}
+#header a {font-weight:bold; text-decoration:none; color:#fff;}
+#header a:hover {text-decoration:underline;}
+#header .login {float:right; margin-right:10px; font-size:13px; line-height:45px;}
+#footer {clear:both; margin-top:10px; padding-top:10px; border-top:1px solid #eee; text-align:center; color: #aaa;}
+
+#content {margin:10px 40px;}
+
+form {margin:0; padding:0;}
+form .submit {padding:20px; text-align:center; font-size:150%;}
+
