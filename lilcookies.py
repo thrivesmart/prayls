@@ -26,6 +26,15 @@ class LilCookies:
     assert isinstance(s, str)
     return s
 
+  @staticmethod
+  def _time_independent_equals(a, b):
+    if len(a) != len(b):
+      return False
+    result = 0
+    for x, y in zip(a, b):
+      result |= ord(x) ^ ord(y)
+    return result == 0
+
   def __init__(self, handler, cookie_secret):
     """You must specify the cookie_secret to use any of the secure methods. 
     It should be a long, random sequence of bytes to be used as the HMAC 
@@ -51,8 +60,8 @@ class LilCookies:
 
   def get_cookie(self, name, default=None):
     """Gets the value of the cookie with the given name, else default."""
-    if name in self.cookies:
-      return self.cookies[name].value
+    if name in self.cookies():
+      return self._cookies[name].value
     return default
 
   def set_cookie(self, name, value, domain=None, expires=None, path="/",
@@ -87,6 +96,10 @@ class LilCookies:
       new_cookie[name]["path"] = path
     for k, v in kwargs.iteritems():
       new_cookie[name][k] = v
+    
+    # The 2 lines below were not in Tornado.  Instead, they output all their cookies to the headers at once before a response flush.
+    for vals in new_cookie.values():
+      self.response.headers._headers.append(('Set-Cookie', vals.OutputString(None)))
 
   def clear_cookie(self, name, path="/", domain=None):
     """Deletes the cookie with the given name."""
@@ -96,7 +109,7 @@ class LilCookies:
 
   def clear_all_cookies(self):
     """Deletes all the cookies the user sent with this request."""
-    for name in self.cookies.iterkeys():
+    for name in self.cookies().iterkeys():
       self.clear_cookie(name)
 
   def set_secure_cookie(self, name, value, expires_days=30, **kwargs):
@@ -117,7 +130,7 @@ class LilCookies:
     parts = value.split("|")
     if len(parts) != 3: return None
     signature = self._cookie_signature(name, parts[0], parts[1])
-    if not _time_independent_equals(parts[2], signature):
+    if not LilCookies._time_independent_equals(parts[2], signature):
       logging.warning("Invalid cookie signature %r", value)
       return None
     timestamp = int(parts[1])

@@ -24,7 +24,14 @@ class LilAuthentication:
     lilcookies.clear_cookie('post_login_url')
 
   @staticmethod
-  def set_current_user(lilcookies, user, expires_days = 2):
+  def redirect_to_post_login_url_or_default(handler, lilcookies, default = '/'):
+    """Redirects to the `post_login_url` or default, and then clears the `post_login_url`.  Typically used in a login handler."""
+    redirection_url = lilcookies.get_cookie(name = 'post_login_url', default = default)
+    handler.redirect(redirection_url)
+    lilcookies.clear_cookie(name = 'post_login_url')
+
+  @staticmethod
+  def set_current_user(lilcookies, user, expires_days = 14):
     """Stores the current user in a secure cookie, using LilCookies and `u` as the cookie key.  Assumes user is a db.Model"""
     lilcookies.set_secure_cookie(name = 'u', value = str(user.key()), expires_days = expires_days)
   
@@ -40,17 +47,21 @@ class LilAuthentication:
       return None
 
   @staticmethod
+  def password_encrypted(clear_password, pw_salt):
+    return hmac.new("--%s--%s--" % (pw_salt, clear_password), digestmod=hashlib.sha1).hexdigest()
+    
+  @staticmethod
   def generate_salt_and_password(clear_password):
     """ Returns a tuple of a custom salt for the password, as well as a password.
     
     Typically, your user model will store both of these for later authentication
     """
     pw_salt = hmac.new("--%s--%s--" % (datetime.datetime.utcnow(), random.getrandbits(16)), digestmod=hashlib.sha1).hexdigest()
-    password = hmac.new("--%s--%s--" % (pw_salt, clear_password), digestmod=hashlib.sha1).hexdigest()
-    return [pw_salt, password]
+    password = LilAuthentication.password_encrypted(clear_password, pw_salt)
+    return (pw_salt, password)
     
   @staticmethod
   def verify_password(clear_password, user_salt, user_encrypted_password):
     """ Returns true or false if the clear password matches the given values, which presumably are stored in your user model"""
-    encrypted_clear_pw = hmac.new("--%s--%s--" % (user_salt, clear_password), digestmod=hashlib.sha1).hexdigest()
-    return user_encrypted_password == encrypted_clear_pw
+    return user_encrypted_password == LilAuthentication.password_encrypted(clear_password, user_salt)
+    
