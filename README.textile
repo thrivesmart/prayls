@@ -1,8 +1,14 @@
 h1.  Prayls, a Google App Engine web framework
 
-Which tries to emulate the structure of a Ruby on Rails application, and provide some of its conveniences.
+Which tries to emulate the structure of a Ruby on Rails application, and provide some of its conveniences.  
+The goal is to provide the same structure and some of the really handy framework functionality, without slowing down performance.
+
+h2.  Example
+
+The best way to see our framework in action is our example app.   Please take a look at the enclosed demo application:
+"http://github.com/thrivesmart/prayls/tree/master/examples/appengine-app/":http://github.com/thrivesmart/prayls/tree/master/examples/appengine-app/
 
 h2. License
 
 Pryals is licensed under the Apache Licence, Version 2.0
-(http://www.apache.org/licenses/LICENSE-2.0.html).
+"http://www.apache.org/licenses/LICENSE-2.0.html":http://www.apache.org/licenses/LICENSE-2.0.html
