@@ -10,9 +10,12 @@ class LilAuthentication:
   @staticmethod
   def login_required(handler, lilcookies, user_class, login_url):
     """Returns the current user if logged in, redirects to login url if not and returns None.  Sets a cookie `post_login_url` to current request url."""
-    current_user = get_current_user(lilcookies, user_class)
+    current_user = LilAuthentication.get_current_user(lilcookies, user_class)
     if current_user == None:
-      lilcookies.set_cookie(name = 'post_login_url', value = handler.request.url(), expires_days=1)
+      lilcookies.set_cookie(
+        name = 'post_login_url', 
+        value = str(handler.request.url), 
+        expires_days=1)
       handler.redirect(login_url)
       return False
     else: return current_user

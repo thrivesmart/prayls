@@ -12,13 +12,24 @@ class LilModel:
     else:
       return db.GqlQuery("SELECT __key__ FROM "+table+" WHERE "+property_name+" = :1", value).get() == None
 
+
+  # Takes an entity and returns the hash of strings that represents that entity, useful for json-ificiation
+  # If properties == None, it will return all properties.  Otherwise it will use only ouput the properties listed.
   @staticmethod
-  def ToHash(entity):
+  def ToHash(entity, properties=None):
     result = {'__key__': str(entity.key())}
-    for prop in entity.__class__.properties():
-      result[prop] = str(getattr(entity, prop))
+    if properties == None:
+      properties = entity.__class__.properties()
+    for prop in properties:     
+      val = getattr(entity, prop)
+      if isinstance(val, db.Model):
+        result[prop] = str(val.key())
+      else:
+        result[prop] = str(val)
+        
     return result
   
+  # Takes an array of entities and returns the hash of strings that represents that array, useful for json-ificiation
   @staticmethod
-  def MapToHash(entity_array):
-    return map(lambda entity: LilModel.ToHash(entity), entity_array)
+  def MapToHash(entity_array, properties=None):
+    return map(lambda entity: LilModel.ToHash(entity, properties), entity_array)
