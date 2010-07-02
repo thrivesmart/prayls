@@ -6,9 +6,28 @@ import hmac
 import datetime
 
 class LilAuthentication:
+    
+  @staticmethod
+  def not_authorized(handler, lilcookies, message= None, login_url= '/login'):
+    """Redirects the user to login_url, setting `login_message` cookie with the message, if necessary."""
+    if message != None:
+      # Secure cookie should help to prevent XSS attacks.
+      lilcookies.set_secure_cookie(
+        name = 'login_message', 
+        value = message, 
+        expires_days=1)
+  
+    handler.redirect(login_url)
 
   @staticmethod
-  def login_required(handler, lilcookies, user_class, login_url):
+  def pop_login_message(lilcookies):
+    """ Retrieves the value in `login_message` cookie, and returns None if it didn't validate or doesn't exist. """
+    login_message = lilcookies.get_secure_cookie(name = 'login_message')
+    lilcookies.clear_cookie(name = 'login_message')
+    return login_message
+  
+  @staticmethod
+  def login_required(handler, lilcookies, user_class, login_url = '/login'):
     """Returns the current user if logged in, redirects to login url if not and returns None.  Sets a cookie `post_login_url` to current request url."""
     current_user = LilAuthentication.get_current_user(lilcookies, user_class)
     if current_user == None:
@@ -17,7 +36,7 @@ class LilAuthentication:
         value = str(handler.request.url), 
         expires_days=1)
       handler.redirect(login_url)
-      return False
+      return None
     else: return current_user
 
   @staticmethod

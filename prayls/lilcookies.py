@@ -35,6 +35,43 @@ class LilCookies:
       result |= ord(x) ^ ord(y)
     return result == 0
 
+  @staticmethod
+  def _signature_from_secret(cookie_secret, *parts):
+    """ Takes a secret salt value to create a signature for values in the `parts` param."""
+    hash = hmac.new(cookie_secret, digestmod=hashlib.sha1)
+    for part in parts: hash.update(part)
+    return hash.hexdigest()
+
+  @staticmethod
+  def _signed_cookie_value(cookie_secret, name, value):
+    """ Returns a signed value for use in a cookie.  
+    
+    This is helpful to have in its own method if you need to re-use this function for other needs. """
+    timestamp = str(int(time.time()))
+    value = base64.b64encode(value)
+    signature = LilCookies._signature_from_secret(cookie_secret, name, value, timestamp)
+    return "|".join([value, timestamp, signature])
+
+  @staticmethod
+  def _verified_cookie_value(cookie_secret, name, signed_value):
+    """Returns the un-encrypted value given the signed value if it validates, or None."""
+    value = signed_value
+    if not value: return None
+    parts = value.split("|")
+    if len(parts) != 3: return None
+    signature = LilCookies._signature_from_secret(cookie_secret, name, parts[0], parts[1])
+    if not LilCookies._time_independent_equals(parts[2], signature):
+      logging.warning("Invalid cookie signature %r", value)
+      return None
+    timestamp = int(parts[1])
+    if timestamp < time.time() - 31 * 86400:
+      logging.warning("Expired cookie %r", value)
+      return None
+    try:
+      return base64.b64decode(parts[0])
+    except:
+      return None
+
   def __init__(self, handler, cookie_secret):
     """You must specify the cookie_secret to use any of the secure methods. 
     It should be a long, random sequence of bytes to be used as the HMAC 
@@ -86,8 +123,7 @@ class LilCookies:
     if domain:
       new_cookie[name]["domain"] = domain
     if expires_days is not None and not expires:
-      expires = datetime.datetime.utcnow() + datetime.timedelta(
-        days=expires_days)
+      expires = datetime.datetime.utcnow() + datetime.timedelta(days=expires_days)
     if expires:
       timestamp = calendar.timegm(expires.utctimetuple())
       new_cookie[name]["expires"] = email.utils.formatdate(
@@ -117,32 +153,13 @@ class LilCookies:
 
     To read a cookie set with this method, use get_secure_cookie().
     """
-    timestamp = str(int(time.time()))
-    value = base64.b64encode(value)
-    signature = self._cookie_signature(name, value, timestamp)
-    value = "|".join([value, timestamp, signature])
+    value = LilCookies._signed_cookie_value(self.cookie_secret, name, value)
     self.set_cookie(name, value, expires_days=expires_days, **kwargs)
 
   def get_secure_cookie(self, name, value=None):
     """Returns the given signed cookie if it validates, or None."""
     if value is None: value = self.get_cookie(name)
-    if not value: return None
-    parts = value.split("|")
-    if len(parts) != 3: return None
-    signature = self._cookie_signature(name, parts[0], parts[1])
-    if not LilCookies._time_independent_equals(parts[2], signature):
-      logging.warning("Invalid cookie signature %r", value)
-      return None
-    timestamp = int(parts[1])
-    if timestamp < time.time() - 31 * 86400:
-      logging.warning("Expired cookie %r", value)
-      return None
-    try:
-      return base64.b64decode(parts[0])
-    except:
-      return None
+    return LilCookies._verified_cookie_value(self.cookie_secret, name, value)
 
   def _cookie_signature(self, *parts):
-    hash = hmac.new(self.cookie_secret, digestmod=hashlib.sha1)
-    for part in parts: hash.update(part)
-    return hash.hexdigest()
+    return LilCookies._signature_from_secret(self.cookie_secret)
